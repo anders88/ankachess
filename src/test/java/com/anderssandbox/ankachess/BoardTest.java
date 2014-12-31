@@ -33,6 +33,12 @@ public class BoardTest {
         Board board = Board.withPiece(Piece.white(PieceType.KING).at("a1"));
         List<Board> boards = board.legalMoves().collect(Collectors.toList());
         assertThat(boards).hasSize(3);
+    }
 
+    @Test
+    public void shouldHandleRock() throws Exception {
+        Stream<Board> moves = Board.withPiece(Piece.white(PieceType.ROCK).at("a1")).legalMoves();
+
+        assertThat(moves.count()).isEqualTo(14);
     }
 }

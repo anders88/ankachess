@@ -31,6 +31,33 @@ public class Board {
     }
 
     private Stream<Optional<Square>> legalSquareForPiece(Piece piece) {
+        switch (piece.pieceType) {
+            case KING:
+                return legalForKing(piece);
+            case ROCK:
+                return legalForRock(piece);
+        }
+        throw new RuntimeException("Unknown pice type " + piece.pieceType);
+    }
+
+    private Stream<Optional<Square>> legalForRock(Piece piece) {
+        List<Optional<Square>> res = new ArrayList<>();
+        res.addAll(legalsFrom(piece.square,Direction.UP));
+        res.addAll(legalsFrom(piece.square,Direction.RIGHT));
+        res.addAll(legalsFrom(piece.square,Direction.DOWN));
+        res.addAll(legalsFrom(piece.square,Direction.LEFT));
+        return res.stream();
+    }
+
+    private List<Optional<Square>> legalsFrom(Square square,Direction direction) {
+        List<Optional<Square>> res = new ArrayList<>();
+        for (Optional<Square> sq = square.negighbour(direction);sq.isPresent();sq = sq.get().negighbour(direction)) {
+            res.add(sq);
+        }
+        return res;
+    }
+
+    private Stream<Optional<Square>> legalForKing(Piece piece) {
         return Direction.allDirections().map(piece.square::negighbour);
     }
 
