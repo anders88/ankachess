@@ -50,23 +50,4 @@ public class Piece {
         return new Factory().withPieceType(pieceType).withWhite(isWhite).withSquare(toSquare).create();
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        Piece piece = (Piece) o;
-
-        if (isWhite != piece.isWhite) return false;
-        if (pieceType != piece.pieceType) return false;
-
-        return true;
-    }
-
-    @Override
-    public int hashCode() {
-        int result = (isWhite ? 1 : 0);
-        result = 31 * result + (pieceType != null ? pieceType.hashCode() : 0);
-        return result;
-    }
 }

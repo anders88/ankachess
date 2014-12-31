@@ -5,24 +5,28 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Board {
-    private Set<Piece> pieces;
+    private Map<Square,Piece> pieces;
 
-    private Board(Set<Piece> pieces) {
-        this.pieces = new HashSet<>(pieces);
+    private Board(Collection<Piece> pieces) {
+        Map<Square, Piece> pieceMap = pieces.stream()
+                .collect(Collectors.groupingBy(p -> p.square))
+                .entrySet().stream()
+                .collect(Collectors.toMap(Map.Entry::getKey, entr -> entr.getValue().get(0)));
+        this.pieces = pieceMap;
     }
 
-    private Board(Stream<Piece> pieces) {
-        this.pieces = pieces.collect(Collectors.toSet());
+    private Board(Map<Square, Piece> pieces) {
+        this.pieces = pieces;
     }
 
     public static Board withPiece(Piece piece) {
-        Set<Piece> pieces = new HashSet<>();
+        List<Piece> pieces = new ArrayList<>();
         pieces.add(piece);
         return new Board(pieces);
     }
 
     public Optional<Piece> pieceAt(Square square) {
-        return pieces.stream().filter(p -> p.square.equals(square)).findAny();
+        return Optional.ofNullable(pieces.get(square));
     }
 
     private Stream<Piece> moveFromPiece(Piece piece) {
@@ -63,13 +67,13 @@ public class Board {
 
 
     private Board moveAPiece(Piece piece) {
-        HashSet<Piece> nboa = new HashSet<>(pieces);
-        nboa.add(piece);
+        Map<Square,Piece> nboa = new HashMap<>(pieces);
+        nboa.put(piece.square, piece);
         return new Board(nboa);
     }
 
     public Stream<Board> legalMoves() {
-        return pieces.stream()
+        return pieces.values().stream()
                 .map(p -> moveFromPiece(p))
                 .flatMap(p -> p)
                 .map(pie -> moveAPiece(pie));
