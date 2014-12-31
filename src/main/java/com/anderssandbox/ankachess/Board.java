@@ -1,55 +1,83 @@
 package com.anderssandbox.ankachess;
 
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Board {
     private Map<Square,Piece> pieces;
 
-    private Board(Collection<Piece> pieces) {
-        Map<Square, Piece> pieceMap = pieces.stream()
-                .collect(Collectors.groupingBy(p -> p.square))
-                .entrySet().stream()
-                .collect(Collectors.toMap(Map.Entry::getKey, entr -> entr.getValue().get(0)));
-        this.pieces = pieceMap;
-    }
-
     private Board(Map<Square, Piece> pieces) {
         this.pieces = pieces;
     }
 
-    public static Board withPiece(Piece piece) {
-        List<Piece> pieces = new ArrayList<>();
-        pieces.add(piece);
-        return new Board(pieces);
+
+
+
+    public static class Factory {
+        private Piece currentPiece = null;
+        private Factory() {
+
+        }
+        private Map<Square,Piece> squarePieceMap = new HashMap<>();
+
+        public Factory withPiece(Piece piece) {
+            if (currentPiece != null) {
+                throw new IllegalStateException("Place the piece");
+            }
+            currentPiece = piece;
+            return this;
+        }
+
+        public Factory at(String squareText) {
+            if (currentPiece == null) {
+                throw new IllegalStateException("Give the piece");
+            }
+            Square square = Square.fromString(squareText);
+            squarePieceMap.put(square,currentPiece);
+            currentPiece = null;
+            return this;
+        }
+
+        public Board create() {
+            return new Board(squarePieceMap);
+        }
+    }
+
+
+
+    public Collection<Piece> allPieces() {
+        return pieces.values();
+    }
+
+    public static Factory withPiece(Piece piece) {
+        return new Factory().withPiece(piece);
     }
 
     public Optional<Piece> pieceAt(Square square) {
         return Optional.ofNullable(pieces.get(square));
     }
 
-    private Stream<Piece> moveFromPiece(Piece piece) {
-        Stream<Piece> res = legalSquareForPiece(piece).filter(Optional::isPresent).map(Optional::get).map(piece::moveMe);
-        return res;
-    }
-
-    private Stream<Optional<Square>> legalSquareForPiece(Piece piece) {
+    private Stream<Move> possibleMovesFrom(Piece piece, Square from) {
+        Stream<Optional<Square>> possMoves;
         switch (piece.pieceType) {
             case KING:
-                return legalForKing(piece);
+                possMoves = legalForKing(piece, from);
+                break;
             case ROCK:
-                return legalForRock(piece);
+                possMoves = legalForRock(piece, from);
+                break;
+            default:
+                throw new RuntimeException("Unknown pice type " + piece.pieceType);
         }
-        throw new RuntimeException("Unknown pice type " + piece.pieceType);
+        return possMoves.filter(Optional::isPresent).map(pm -> new Move(piece, from,pm.get()));
     }
 
-    private Stream<Optional<Square>> legalForRock(Piece piece) {
+    private Stream<Optional<Square>> legalForRock(Piece piece,Square square) {
         List<Optional<Square>> res = new ArrayList<>();
-        res.addAll(legalsFrom(piece.square,Direction.UP));
-        res.addAll(legalsFrom(piece.square,Direction.RIGHT));
-        res.addAll(legalsFrom(piece.square,Direction.DOWN));
-        res.addAll(legalsFrom(piece.square,Direction.LEFT));
+        res.addAll(legalsFrom(square,Direction.UP));
+        res.addAll(legalsFrom(square,Direction.RIGHT));
+        res.addAll(legalsFrom(square,Direction.DOWN));
+        res.addAll(legalsFrom(square,Direction.LEFT));
         return res.stream();
     }
 
@@ -61,20 +89,21 @@ public class Board {
         return res;
     }
 
-    private Stream<Optional<Square>> legalForKing(Piece piece) {
-        return Direction.allDirections().map(piece.square::negighbour);
+    private Stream<Optional<Square>> legalForKing(Piece piece,Square square) {
+        return Direction.allDirections().map(square::negighbour);
     }
 
 
-    private Board moveAPiece(Piece piece) {
+    private Board moveAPiece(Move move) {
         Map<Square,Piece> nboa = new HashMap<>(pieces);
-        nboa.put(piece.square, piece);
+        nboa.remove(move.from);
+        nboa.put(move.to, move.piece);
         return new Board(nboa);
     }
 
     public Stream<Board> legalMoves() {
-        return pieces.values().stream()
-                .map(p -> moveFromPiece(p))
+        return pieces.entrySet().stream()
+                .map(entr -> possibleMovesFrom(entr.getValue(), entr.getKey()))
                 .flatMap(p -> p)
                 .map(pie -> moveAPiece(pie));
     }
