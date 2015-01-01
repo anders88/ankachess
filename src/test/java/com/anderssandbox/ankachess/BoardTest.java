@@ -46,8 +46,24 @@ public class BoardTest {
     }
 
     @Test
-    public void shouldHandleOtherPieces() throws Exception {
+    public void shouldOnlyMoveMyPieces() throws Exception {
+        Board board = Board.withPiece(Piece.white(PieceType.ROCK)).at("a1").create();
+        Stream<Board> moves = board.legalMoves(false);
 
+        assertThat(moves.count()).isEqualTo(0);
+
+    }
+
+    @Test
+    public void shouldHandleOtherPieces() throws Exception {
+        Board board = Board
+                .withPiece(Piece.white(PieceType.KING)).at("a2")
+                .withPiece(Piece.white(PieceType.ROCK)).at("a1")
+                .create();
+
+        List<Board> moves = board.legalMoves(true).collect(Collectors.toList());
+
+        assertThat(moves).hasSize(11);
 
     }
 }

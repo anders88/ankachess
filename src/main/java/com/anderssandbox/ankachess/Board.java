@@ -58,7 +58,7 @@ public class Board {
     }
 
     private Stream<Move> possibleMovesFrom(Piece piece, Square from) {
-        Stream<Optional<Square>> possMoves;
+        Stream<Square> possMoves;
         switch (piece.pieceType) {
             case KING:
                 possMoves = legalForKing(piece, from);
@@ -69,28 +69,36 @@ public class Board {
             default:
                 throw new RuntimeException("Unknown pice type " + piece.pieceType);
         }
-        return possMoves.filter(Optional::isPresent).map(pm -> new Move(piece, from,pm.get()));
+        return possMoves.map(pm -> new Move(piece, from, pm));
     }
 
-    private Stream<Optional<Square>> legalForRock(Piece piece,Square square) {
-        List<Optional<Square>> res = new ArrayList<>();
-        res.addAll(legalsFrom(square,Direction.UP));
-        res.addAll(legalsFrom(square,Direction.RIGHT));
-        res.addAll(legalsFrom(square,Direction.DOWN));
-        res.addAll(legalsFrom(square,Direction.LEFT));
+    private Stream<Square> legalForRock(Piece piece,Square square) {
+        List<Square> res = new ArrayList<>();
+        res.addAll(legalsFrom(square,Direction.UP,piece.isWhite));
+        res.addAll(legalsFrom(square,Direction.RIGHT,piece.isWhite));
+        res.addAll(legalsFrom(square,Direction.DOWN,piece.isWhite));
+        res.addAll(legalsFrom(square,Direction.LEFT,piece.isWhite));
         return res.stream();
     }
 
-    private List<Optional<Square>> legalsFrom(Square square,Direction direction) {
-        List<Optional<Square>> res = new ArrayList<>();
+    private List<Square> legalsFrom(Square square,Direction direction, boolean whitePiece) {
+        List<Square> res = new ArrayList<>();
         for (Optional<Square> sq = square.negighbour(direction);sq.isPresent();sq = sq.get().negighbour(direction)) {
-            res.add(sq);
+            if (pieceAt(sq.get()).filter(pi -> pi.isWhite == whitePiece).isPresent()) {
+                break;
+            }
+            res.add(sq.get());
         }
         return res;
     }
 
-    private Stream<Optional<Square>> legalForKing(Piece piece,Square square) {
-        return Direction.allDirections().map(square::negighbour);
+    private Stream<Square> legalForKing(Piece piece,Square square) {
+        return Direction.allDirections()
+                .map(square::negighbour)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(sq -> !pieceAt(sq).filter(pi -> pi.isWhite == piece.isWhite).isPresent())
+                ;
     }
 
 
@@ -103,8 +111,16 @@ public class Board {
 
     public Stream<Board> legalMoves(boolean whiteToMove) {
         return pieces.entrySet().stream()
+                .filter(en -> en.getValue().isWhite == whiteToMove)
                 .map(entr -> possibleMovesFrom(entr.getValue(), entr.getKey()))
                 .flatMap(p -> p)
-                .map(pie -> moveAPiece(pie));
+                .map(this::moveAPiece);
+    }
+
+    @Override
+    public String toString() {
+        return "Board{" +
+                "pieces=" + pieces +
+                '}';
     }
 }

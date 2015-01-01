@@ -14,5 +14,11 @@ public class Piece {
     }
 
 
-
+    @Override
+    public String toString() {
+        return "Piece{" +
+                "isWhite=" + isWhite +
+                ", pieceType=" + pieceType +
+                '}';
+    }
 }
