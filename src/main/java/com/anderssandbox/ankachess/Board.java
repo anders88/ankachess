@@ -45,8 +45,8 @@ public class Board {
 
 
 
-    public Collection<Piece> allPieces() {
-        return pieces.values();
+    public Map<Square,Piece> allPieces() {
+        return new HashMap<>(pieces);
     }
 
     public static Factory withPiece(Piece piece) {
@@ -101,7 +101,7 @@ public class Board {
         return new Board(nboa);
     }
 
-    public Stream<Board> legalMoves() {
+    public Stream<Board> legalMoves(boolean whiteToMove) {
         return pieces.entrySet().stream()
                 .map(entr -> possibleMovesFrom(entr.getValue(), entr.getKey()))
                 .flatMap(p -> p)

@@ -4,7 +4,6 @@ import org.junit.Test;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -26,7 +25,7 @@ public class BoardTest {
     public void shouldFindLegalMovesForLonelyKing() throws Exception {
         Board board = Board.withPiece(Piece.white(PieceType.KING)).at("e2").create();
 
-        List<Board> boards = board.legalMoves().collect(Collectors.toList());
+        List<Board> boards = board.legalMoves(true).collect(Collectors.toList());
         assertThat(boards).hasSize(8);
         assertThat(boards.get(0).allPieces()).hasSize(1);
     }
@@ -34,15 +33,21 @@ public class BoardTest {
     @Test
     public void shouldHandlePlacementOnEdge() throws Exception {
         Board board = Board.withPiece(Piece.white(PieceType.KING)).at("a1").create();
-        List<Board> boards = board.legalMoves().collect(Collectors.toList());
+        List<Board> boards = board.legalMoves(true).collect(Collectors.toList());
         assertThat(boards).hasSize(3);
     }
 
     @Test
     public void shouldHandleRock() throws Exception {
         Board board = Board.withPiece(Piece.white(PieceType.ROCK)).at("a1").create();
-        Stream<Board> moves = board.legalMoves();
+        Stream<Board> moves = board.legalMoves(true);
 
         assertThat(moves.count()).isEqualTo(14);
+    }
+
+    @Test
+    public void shouldHandleOtherPieces() throws Exception {
+
+
     }
 }
