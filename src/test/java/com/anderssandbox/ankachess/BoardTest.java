@@ -66,4 +66,15 @@ public class BoardTest {
         assertThat(moves).hasSize(11);
 
     }
+
+    @Test
+    public void shouldHandleQueens() throws Exception {
+        assertThat(Board.withPiece(Piece.white(PieceType.QUEEN)).at("a8").create().legalMoves(true).count()).isEqualTo(21);
+    }
+
+    @Test
+    public void shouldHandleBishops() throws Exception {
+        assertThat(Board.withPiece(Piece.white(PieceType.BISHOP)).at("a8").create().legalMoves(true).count()).isEqualTo(7);
+    }
+
 }

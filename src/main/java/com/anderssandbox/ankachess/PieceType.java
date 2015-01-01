@@ -1,5 +1,5 @@
 package com.anderssandbox.ankachess;
 
 public enum PieceType {
-    KING,ROCK
+    KING,QUEEN,ROCK,BISHOP;
 }

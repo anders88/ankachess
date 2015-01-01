@@ -1,6 +1,7 @@
 package com.anderssandbox.ankachess;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class Board {
@@ -63,8 +64,14 @@ public class Board {
             case KING:
                 possMoves = legalForKing(piece, from);
                 break;
+            case QUEEN:
+                possMoves = legalForGiven(piece, from, Direction.allDirections().collect(Collectors.toList()));
+                break;
             case ROCK:
-                possMoves = legalForRock(piece, from);
+                possMoves = legalForGiven(piece, from, Arrays.asList(Direction.UP, Direction.RIGHT, Direction.DOWN, Direction.LEFT));
+                break;
+            case BISHOP:
+                possMoves = legalForGiven(piece, from, Arrays.asList(Direction.UP_RIGHT, Direction.DOWN_RIGHT, Direction.DOWN_LEFT, Direction.UP_LEFT));
                 break;
             default:
                 throw new RuntimeException("Unknown pice type " + piece.pieceType);
@@ -72,13 +79,11 @@ public class Board {
         return possMoves.map(pm -> new Move(piece, from, pm));
     }
 
-    private Stream<Square> legalForRock(Piece piece,Square square) {
-        List<Square> res = new ArrayList<>();
-        res.addAll(legalsFrom(square,Direction.UP,piece.isWhite));
-        res.addAll(legalsFrom(square,Direction.RIGHT,piece.isWhite));
-        res.addAll(legalsFrom(square,Direction.DOWN,piece.isWhite));
-        res.addAll(legalsFrom(square,Direction.LEFT,piece.isWhite));
-        return res.stream();
+    private Stream<Square> legalForGiven(Piece piece, Square square, List<Direction> directions) {
+        return directions.stream()
+                .map(dir -> legalsFrom(square,dir,piece.isWhite))
+                .flatMap(li -> li.stream());
+
     }
 
     private List<Square> legalsFrom(Square square,Direction direction, boolean whitePiece) {
